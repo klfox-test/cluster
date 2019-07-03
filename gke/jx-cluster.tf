@@ -4,9 +4,14 @@ provider "google" {
     region = "${var.region}"
 }
 
+data "google_container_engine_versions" "current_location" {
+  location           = "${var.location}"
+}
+
 resource "google_container_cluster" "jx-cluster" {
     name = "jx-cluster"
     location = "${var.location}"
+    min_master_version = "${data.google_container_engine_versions.current_location.latest_master_version}"
 
     remove_default_node_pool = true
     initial_node_count = 1
@@ -23,6 +28,7 @@ resource "google_container_node_pool" "jx_cluster_nodes" {
     location = "${var.location}"
     cluster = "${google_container_cluster.jx-cluster.name}"
     initial_node_count  = 3
+    version = "${data.google_container_engine_versions.current_location.latest_master_version}"
  
     autoscaling {
         max_node_count = 5
